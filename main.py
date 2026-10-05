@@ -442,71 +442,81 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
             
         filter_str = ";".join(filter_parts)
         
-        # Determine encoder (NVENC GPU or CPU)
-        video_encoder = ["-c:v", "h264_nvenc", "-preset", "p5", "-b:v", "10M"] if req.use_gpu else ["-c:v", "libx264", "-preset", "fast", "-crf", "19"]
-        
-        cmd = [
-            "ffmpeg",
-            "-y",
-            "-loglevel", "warning",
-            "-nostats",
-            "-ss", str(req.start_time),
-            "-t", str(duration),
-            "-i", req.video_path,
-            "-filter_complex", filter_str,
-            "-map", last_node,
-            "-map", "0:a?",
-            *video_encoder,
-            "-c:a", "aac",
-            "-b:a", "192k",
-            "-r", str(req.fps),
-            "-pix_fmt", "yuv420p",
-            "-movflags", "+faststart",
-            "-progress", "pipe:1",
-            out_path
-        ]
-        
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,
-            universal_newlines=True
-        )
-        
-        stderr_lines = []
-        def read_stderr():
-            try:
-                for s_line in process.stderr:
-                    stderr_lines.append(s_line)
-            except Exception:
-                pass
-                
-        err_thread = threading.Thread(target=read_stderr, daemon=True)
-        err_thread.start()
-        
-        for line in process.stdout:
-            line = line.strip()
-            if "=" in line:
-                key, val = line.split("=", 1)
-                if key == "out_time_ms":
-                    try:
-                        ms = int(val)
-                        curr_sec = ms / 1_000_000
-                        pct = min(99.0, max(0.0, round((curr_sec / duration) * 100, 1)))
-                        active_jobs[job_id]["progress"] = pct
-                    except Exception:
-                        pass
-                elif key == "fps":
-                    active_jobs[job_id]["fps"] = val
-                elif key == "speed":
-                    active_jobs[job_id]["speed"] = val
+        # Run FFmpeg process with retry/fallback
+        def execute_ffmpeg(encoder_args):
+            nonlocal process, stderr_lines
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-loglevel", "warning",
+                "-nostats",
+                "-ss", str(req.start_time),
+                "-t", str(duration),
+                "-i", req.video_path,
+                "-filter_complex", filter_str,
+                "-map", last_node,
+                "-map", "0:a?",
+                *encoder_args,
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-r", str(req.fps),
+                "-pix_fmt", "yuv420p",
+                "-movflags", "+faststart",
+                "-progress", "pipe:1",
+                out_path
+            ]
+            
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            stderr_lines = []
+            def read_stderr():
+                try:
+                    for s_line in process.stderr:
+                        stderr_lines.append(s_line)
+                except Exception:
+                    pass
                     
-        process.wait()
-        err_thread.join(timeout=1.0)
+            err_thread = threading.Thread(target=read_stderr, daemon=True)
+            err_thread.start()
+            
+            for line in process.stdout:
+                line = line.strip()
+                if "=" in line:
+                    key, val = line.split("=", 1)
+                    if key == "out_time_ms":
+                        try:
+                            ms = int(val)
+                            curr_sec = ms / 1_000_000
+                            pct = min(99.0, max(0.0, round((curr_sec / duration) * 100, 1)))
+                            active_jobs[job_id]["progress"] = pct
+                        except Exception:
+                            pass
+                    elif key == "fps":
+                        active_jobs[job_id]["fps"] = val
+                    elif key == "speed":
+                        active_jobs[job_id]["speed"] = val
+                        
+            process.wait()
+            err_thread.join(timeout=1.0)
+            return process.returncode
+
+        # First attempt (NVENC if requested, else CPU)
+        initial_encoder = ["-c:v", "h264_nvenc", "-preset", "p5", "-b:v", "10M"] if req.use_gpu else ["-c:v", "libx264", "-preset", "fast", "-crf", "19"]
+        ret = execute_ffmpeg(initial_encoder)
         
-        if process.returncode == 0 and os.path.exists(out_path):
+        # If NVENC failed (e.g. non-NVIDIA card, AMD, Intel, or older GPU), fallback automatically to CPU libx264
+        if ret != 0 and req.use_gpu:
+            print("⚠️ NVENC donanım kodlaması desteklenmiyor veya hata verdi. CPU (libx264) moduna geçiliyor...")
+            ret = execute_ffmpeg(["-c:v", "libx264", "-preset", "fast", "-crf", "19"])
+
+        if ret == 0 and os.path.exists(out_path):
             active_jobs[job_id]["status"] = "completed"
             active_jobs[job_id]["progress"] = 100
             active_jobs[job_id]["output_file"] = out_name
@@ -515,8 +525,11 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
         else:
             err_msg = "".join(stderr_lines)
             active_jobs[job_id]["status"] = "error"
-            active_jobs[job_id]["error"] = f"FFmpeg Error (Exit {process.returncode}): {err_msg}"
+            active_jobs[job_id]["error"] = f"FFmpeg Hatası (Çıkış Kodu {ret}): {err_msg}"
             
+    except FileNotFoundError:
+        active_jobs[job_id]["status"] = "error"
+        active_jobs[job_id]["error"] = "FFmpeg bulunamadı! Lütfen bilgisayarınıza FFmpeg kurun ('winget install Gyan.FFmpeg')."
     except Exception as e:
         active_jobs[job_id]["status"] = "error"
         active_jobs[job_id]["error"] = str(e)
