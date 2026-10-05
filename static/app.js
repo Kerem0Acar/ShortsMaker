@@ -31,6 +31,17 @@ const state = {
   dividerColor: '#06b6d4',
   dividerThickness: 4,
   
+  // Social Watermark Badge
+  badge: {
+    enabled: true,
+    platform: 'tiktok',
+    username: 'jahrein',
+    format: 'url',
+    size: 'medium',
+    position: 'divider',
+    customText: ''
+  },
+  
   // Render / Job tracking
   currentExportJobId: null,
   pollInterval: null
@@ -105,6 +116,18 @@ const dom = {
   chkSocialOverlay: document.getElementById('chkSocialOverlay'),
   socialOverlayUi: document.getElementById('socialOverlayUi'),
   
+  // Social Badge Controls
+  chkEnableBadge: document.getElementById('chkEnableBadge'),
+  badgeToggleLabel: document.getElementById('badgeToggleLabel'),
+  badgeOptionsBody: document.getElementById('badgeOptionsBody'),
+  platformChips: document.querySelectorAll('.platform-chip'),
+  badgeUsernameInput: document.getElementById('badgeUsernameInput'),
+  badgeFormatSelect: document.getElementById('badgeFormatSelect'),
+  badgeCustomTextGroup: document.getElementById('badgeCustomTextGroup'),
+  badgeCustomTextInput: document.getElementById('badgeCustomTextInput'),
+  badgeSizeSelect: document.getElementById('badgeSizeSelect'),
+  badgePositionSelect: document.getElementById('badgePositionSelect'),
+  
   // Export
   exportTitleInput: document.getElementById('exportTitleInput'),
   btnStartExport: document.getElementById('btnStartExport'),
@@ -137,6 +160,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupTimeline();
   setupCropCanvasInteractions();
   setupStyleControls();
+  setupBadgeControls();
   setupPresets();
   setupExport();
   setupModals();
@@ -893,6 +917,336 @@ function setupStyleControls() {
   });
 }
 
+// 9.5 SOCIAL WATERMARK BADGE CONTROLS
+function setupBadgeControls() {
+  if (!dom.chkEnableBadge) return;
+
+  dom.chkEnableBadge.addEventListener('change', (e) => {
+    state.badge.enabled = e.target.checked;
+    dom.badgeToggleLabel.textContent = e.target.checked ? 'Aktif' : 'Kapalı';
+    dom.badgeToggleLabel.style.color = e.target.checked ? '#34d399' : '#64748b';
+    dom.badgeOptionsBody.style.opacity = e.target.checked ? '1' : '0.4';
+    dom.badgeOptionsBody.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+  });
+
+  dom.platformChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      dom.platformChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.badge.platform = chip.getAttribute('data-platform');
+    });
+  });
+
+  dom.badgeUsernameInput.addEventListener('input', (e) => {
+    state.badge.username = e.target.value;
+  });
+
+  dom.badgeFormatSelect.addEventListener('change', (e) => {
+    state.badge.format = e.target.value;
+    dom.badgeCustomTextGroup.style.display = e.target.value === 'custom' ? 'block' : 'none';
+  });
+
+  dom.badgeCustomTextInput.addEventListener('input', (e) => {
+    state.badge.customText = e.target.value;
+  });
+
+  dom.badgeSizeSelect.addEventListener('change', (e) => {
+    state.badge.size = e.target.value;
+  });
+
+  dom.badgePositionSelect.addEventListener('change', (e) => {
+    state.badge.position = e.target.value;
+  });
+}
+
+// Helper: draw rounded rectangle
+function drawRoundRect(ctx, x, y, w, h, r) {
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    return;
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// Helper: get display text for badge
+function getBadgeDisplayText(badge) {
+  if (badge.format === 'custom') {
+    return badge.customText.trim() || 'video';
+  }
+  const cleanUser = (badge.username || '').trim().replace(/^@+/, '') || 'kullanici';
+  if (badge.format === 'name') {
+    return cleanUser;
+  }
+  if (badge.format === 'handle') {
+    return `@${cleanUser}`;
+  }
+  switch (badge.platform) {
+    case 'tiktok': return `tiktok.com/@${cleanUser}`;
+    case 'instagram': return `instagram.com/${cleanUser}`;
+    case 'youtube': return `youtube.com/@${cleanUser}`;
+    case 'kick': return `kick.com/${cleanUser}`;
+    case 'twitch': return `twitch.tv/${cleanUser}`;
+    default: return `@${cleanUser}`;
+  }
+}
+
+// Platform visual theme specifications
+const platformBadgeThemes = {
+  tiktok: {
+    name: 'TIKTOK',
+    border: '#00f2fe',
+    glow: 'rgba(0, 242, 254, 0.45)',
+    pillBg: '#010101'
+  },
+  instagram: {
+    name: 'INSTA',
+    border: '#e1306c',
+    glow: 'rgba(225, 48, 108, 0.45)',
+    pillBg: 'gradient'
+  },
+  youtube: {
+    name: 'YOUTUBE',
+    border: '#ff0000',
+    glow: 'rgba(255, 0, 0, 0.45)',
+    pillBg: '#ff0000'
+  },
+  kick: {
+    name: 'KICK',
+    border: '#53fc18',
+    glow: 'rgba(83, 252, 24, 0.5)',
+    pillBg: '#53fc18'
+  },
+  twitch: {
+    name: 'TWITCH',
+    border: '#9146ff',
+    glow: 'rgba(145, 70, 255, 0.45)',
+    pillBg: '#9146ff'
+  }
+};
+
+// Draw platform icon/pill on canvas
+function drawPlatformIcon(ctx, platform, x, y, w, h, theme) {
+  ctx.save();
+  const radius = Math.round(h * 0.35);
+
+  if (platform === 'instagram') {
+    // Instagram vibrant gradient
+    const grad = ctx.createLinearGradient(x, y + h, x + w, y);
+    grad.addColorStop(0, '#f09433');
+    grad.addColorStop(0.5, '#dc2743');
+    grad.addColorStop(1, '#bc1888');
+    ctx.fillStyle = grad;
+    drawRoundRect(ctx, x, y, w, h, radius);
+    ctx.fill();
+
+    // Camera outline
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.2;
+    const camMargin = Math.round(h * 0.22);
+    drawRoundRect(ctx, x + camMargin, y + camMargin, w - (camMargin * 2), h - (camMargin * 2), 4);
+    ctx.stroke();
+
+    // Center lens
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + h / 2, Math.round(h * 0.16), 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Flash dot
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x + w - camMargin - 4, y + camMargin + 4, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+  } else if (platform === 'youtube') {
+    // YouTube red pill + play triangle
+    ctx.fillStyle = '#ff0000';
+    drawRoundRect(ctx, x, y, w, h, radius);
+    ctx.fill();
+
+    // White play triangle
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    const triX = x + Math.round(w * 0.40);
+    const triY = y + Math.round(h * 0.30);
+    const triH = Math.round(h * 0.40);
+    const triW = Math.round(triH * 0.85);
+    ctx.moveTo(triX, triY);
+    ctx.lineTo(triX + triW, triY + (triH / 2));
+    ctx.lineTo(triX, triY + triH);
+    ctx.closePath();
+    ctx.fill();
+
+  } else if (platform === 'kick') {
+    // Kick neon green badge with bold black KICK text
+    ctx.fillStyle = '#53fc18';
+    drawRoundRect(ctx, x, y, w, h, radius);
+    ctx.fill();
+
+    ctx.fillStyle = '#000000';
+    ctx.font = `900 ${Math.round(h * 0.50)}px "JetBrains Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('KICK', x + (w / 2), y + (h / 2) + 1);
+
+  } else if (platform === 'tiktok') {
+    // TikTok dark pill with cyan/magenta note
+    ctx.fillStyle = '#010101';
+    drawRoundRect(ctx, x, y, w, h, radius);
+    ctx.fill();
+    ctx.strokeStyle = '#00f2fe';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Musical note with offset shadow
+    const midX = x + w / 2;
+    const midY = y + h / 2;
+
+    // Pink offset shadow
+    ctx.fillStyle = '#fe0979';
+    ctx.beginPath();
+    ctx.arc(midX - 3, midY + 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cyan main note
+    ctx.fillStyle = '#00f2fe';
+    ctx.beginPath();
+    ctx.arc(midX - 4, midY + 3, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(midX - 2, midY - 6, 2.5, 9);
+    ctx.fillRect(midX - 2, midY - 6, 6, 2.5);
+
+  } else if (platform === 'twitch') {
+    // Twitch purple pill
+    ctx.fillStyle = '#9146ff';
+    drawRoundRect(ctx, x, y, w, h, radius);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    const boxW = Math.round(w * 0.55);
+    const boxH = Math.round(h * 0.55);
+    const boxX = x + (w - boxW) / 2;
+    const boxY = y + (h - boxH) / 2;
+    drawRoundRect(ctx, boxX, boxY, boxW, boxH, 3);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#9146ff';
+    ctx.fillRect(boxX + 4, boxY + 5, 2.5, 6);
+    ctx.fillRect(boxX + boxW - 6.5, boxY + 5, 2.5, 6);
+  }
+
+  ctx.restore();
+}
+
+// Master badge renderer on 1080x1920 canvas
+function drawBadgeOnCanvas(ctx, outW, outH, topH) {
+  const badge = state.badge;
+  if (!badge || !badge.enabled) return;
+
+  const text = getBadgeDisplayText(badge);
+  const theme = platformBadgeThemes[badge.platform] || platformBadgeThemes.tiktok;
+
+  // Sizing configurations ("Görseldeki kadar büyük olmasın. Okunabilir olsun")
+  let badgeH = 68;
+  let fontSize = 29;
+  let iconW = 54;
+  let iconH = 40;
+  let radius = 18;
+  let padX = 18;
+
+  if (badge.size === 'compact') {
+    badgeH = 54;
+    fontSize = 24;
+    iconW = 44;
+    iconH = 34;
+    radius = 15;
+    padX = 15;
+  } else if (badge.size === 'large') {
+    badgeH = 82;
+    fontSize = 35;
+    iconW = 66;
+    iconH = 48;
+    radius = 22;
+    padX = 22;
+  }
+
+  // Measure text width
+  ctx.save();
+  ctx.font = `800 ${fontSize}px "Plus Jakarta Sans", -apple-system, sans-serif`;
+  const textWidth = ctx.measureText(text).width;
+  const gap = 12;
+  const totalW = padX + iconW + gap + textWidth + padX;
+
+  // Position
+  let y;
+  if (badge.position === 'divider') {
+    // Perfectly centered on the dividing seam between top webcam & bottom game
+    y = Math.round(topH - badgeH / 2);
+  } else if (badge.position === 'top') {
+    y = Math.round(topH - badgeH - 30);
+  } else if (badge.position === 'bottom') {
+    y = Math.round(outH - badgeH - 120);
+  } else {
+    y = Math.round(topH - badgeH / 2);
+  }
+  const x = Math.round((outW - totalW) / 2);
+
+  // 1. Drop shadow & glass background
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 6;
+
+  ctx.fillStyle = 'rgba(9, 13, 22, 0.93)';
+  drawRoundRect(ctx, x, y, totalW, badgeH, radius);
+  ctx.fill();
+
+  // 2. Glow Border matching platform
+  ctx.shadowColor = theme.glow;
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 0;
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = theme.border;
+  drawRoundRect(ctx, x, y, totalW, badgeH, radius);
+  ctx.stroke();
+
+  // Reset shadow for crisp inner elements
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // 3. Platform Icon
+  const iconX = x + padX;
+  const iconY = y + Math.round((badgeH - iconH) / 2);
+  drawPlatformIcon(ctx, badge.platform, iconX, iconY, iconW, iconH, theme);
+
+  // 4. Clean bold white text
+  const textX = iconX + iconW + gap;
+  const textY = y + Math.round(badgeH / 2) + Math.round(fontSize * 0.35);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `800 ${fontSize}px "Plus Jakarta Sans", -apple-system, sans-serif`;
+
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+  ctx.shadowBlur = 5;
+  ctx.shadowOffsetY = 2;
+  ctx.fillText(text, textX, textY);
+
+  ctx.restore();
+}
+
 // 10. REAL-TIME 9:16 PREVIEW RENDER LOOP
 function startPreviewRenderLoop() {
   const pCanvas = dom.previewCanvas;
@@ -934,6 +1288,11 @@ function startPreviewRenderLoop() {
         const lineY = topH - Math.round(state.dividerThickness / 2);
         ctx.fillRect(0, lineY, outW, state.dividerThickness);
       }
+
+      // Social Media / Channel Watermark Badge Overlay
+      if (state.badge && state.badge.enabled) {
+        drawBadgeOnCanvas(ctx, outW, outH, topH);
+      }
     }
     requestAnimationFrame(render);
   }
@@ -962,6 +1321,29 @@ function setupExport() {
       use_gpu: true,
       output_title: title
     };
+
+    // Social Media / Watermark Badge Overlay
+    if (state.badge && state.badge.enabled) {
+      payload.badge_enabled = true;
+      payload.badge_platform = state.badge.platform;
+      payload.badge_username = state.badge.username;
+      payload.badge_format = state.badge.format;
+      payload.badge_position = state.badge.position;
+      payload.badge_size = state.badge.size;
+      payload.badge_custom_text = state.badge.customText;
+
+      try {
+        const offscreen = document.createElement('canvas');
+        offscreen.width = 1080;
+        offscreen.height = 1920;
+        const oCtx = offscreen.getContext('2d');
+        const topH = Math.round(1920 * state.splitRatio);
+        drawBadgeOnCanvas(oCtx, 1080, 1920, topH);
+        payload.badge_image_base64 = offscreen.toDataURL('image/png');
+      } catch (err) {
+        console.warn('Offscreen badge render error:', err);
+      }
+    }
 
     // Open export modal
     dom.exportModal.style.display = 'flex';

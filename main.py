@@ -64,6 +64,14 @@ class ExportRequest(BaseModel):
     divider_color: str = "#06b6d4"  # neon cyan, or 'none'
     use_gpu: bool = True
     output_title: Optional[str] = "short"
+    badge_enabled: bool = False
+    badge_platform: Optional[str] = "tiktok"
+    badge_username: Optional[str] = "jahrein"
+    badge_format: Optional[str] = "url"
+    badge_position: Optional[str] = "divider"
+    badge_size: Optional[str] = "medium"
+    badge_custom_text: Optional[str] = ""
+    badge_image_base64: Optional[str] = None
 
 def get_video_metadata(filepath: str) -> Dict[str, Any]:
     """Uses ffprobe to extract video width, height, duration, fps, and codecs."""
@@ -384,6 +392,7 @@ async def detect_face(req: FaceDetectRequest):
 
 def run_export_ffmpeg(job_id: str, req: ExportRequest):
     """Runs FFmpeg filtergraph to produce the vertical split short."""
+    badge_file = None
     try:
         import threading
         active_jobs[job_id]["status"] = "processing"
@@ -427,14 +436,40 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
         
         last_node = "[stacked]"
         
+        badge_file = None
+        if req.badge_image_base64:
+            try:
+                import base64
+                img_data = req.badge_image_base64
+                if "," in img_data:
+                    img_data = img_data.split(",", 1)[1]
+                raw_bytes = base64.b64decode(img_data)
+                badge_file = str(EXPORTS_DIR / f"badge_{job_id}.png")
+                with open(badge_file, "wb") as bf:
+                    bf.write(raw_bytes)
+            except Exception as e:
+                print("Badge decode error:", e)
+                badge_file = None
+
         if req.divider_thickness > 0 and req.divider_color.lower() != 'none':
             div_color = req.divider_color
             if div_color.startswith('#'):
                 div_color = "0x" + div_color.lstrip('#')
                 
             div_y = top_h - (req.divider_thickness // 2)
-            div_filter = f"{last_node}drawbox=x=0:y={div_y}:w={out_w}:h={req.divider_thickness}:color={div_color}:t=fill[v_final]"
+            div_filter = f"{last_node}drawbox=x=0:y={div_y}:w={out_w}:h={req.divider_thickness}:color={div_color}:t=fill[v_div]"
             filter_parts.append(div_filter)
+            last_node = "[v_div]"
+
+        input_args = [
+            "-ss", str(req.start_time),
+            "-t", str(duration),
+            "-i", req.video_path
+        ]
+
+        if badge_file and os.path.exists(badge_file):
+            input_args.extend(["-i", badge_file])
+            filter_parts.append(f"{last_node}[1:v]overlay=0:0:format=auto[v_final]")
             last_node = "[v_final]"
         else:
             filter_parts.append(f"{last_node}copy[v_final]")
@@ -449,9 +484,7 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
                 "-y",
                 "-loglevel", "warning",
                 "-nostats",
-                "-ss", str(req.start_time),
-                "-t", str(duration),
-                "-i", req.video_path,
+                *input_args,
                 "-filter_complex", filter_str,
                 "-map", last_node,
                 "-map", "0:a?",
@@ -531,6 +564,12 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
     except Exception as e:
         active_jobs[job_id]["status"] = "error"
         active_jobs[job_id]["error"] = str(e)
+    finally:
+        if badge_file and os.path.exists(badge_file):
+            try:
+                os.remove(badge_file)
+            except Exception:
+                pass
 
 
 @app.post("/api/export")

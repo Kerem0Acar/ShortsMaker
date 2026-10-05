@@ -1252,3 +1252,243 @@ input:checked + .slider:before {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ========================================================
+   SOSYAL MEDYA / WATERMARK BADGE STYLES
+   ======================================================== */
+.badge-controls-panel {
+  margin-top: 18px;
+  background: rgba(13, 18, 29, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  transition: var(--transition);
+}
+
+.badge-controls-panel:hover {
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.badge-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 16px;
+}
+
+.badge-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge-header-icon {
+  font-size: 1.3rem;
+  width: 38px;
+  height: 38px;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-header-info h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.badge-header-info p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.badge-header-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.badge-options-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: opacity 0.2s ease;
+}
+
+.badge-sublabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* PLATFORM CHIPS */
+.platform-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.platform-chip:hover {
+  background: var(--bg-card-hover);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.platform-chip.active {
+  color: white;
+  font-weight: 700;
+  transform: translateY(-1px);
+}
+
+/* Platform specific active glow */
+.platform-chip[data-platform="tiktok"].active {
+  background: rgba(0, 242, 254, 0.12);
+  border-color: #00f2fe;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.35);
+  color: #00f2fe;
+}
+
+.platform-chip[data-platform="instagram"].active {
+  background: rgba(225, 48, 108, 0.12);
+  border-color: #e1306c;
+  box-shadow: 0 0 12px rgba(225, 48, 108, 0.35);
+  color: #f43f5e;
+}
+
+.platform-chip[data-platform="youtube"].active {
+  background: rgba(255, 0, 0, 0.12);
+  border-color: #ff0000;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.35);
+  color: #ff4d4d;
+}
+
+.platform-chip[data-platform="kick"].active {
+  background: rgba(83, 252, 24, 0.12);
+  border-color: #53fc18;
+  box-shadow: 0 0 12px rgba(83, 252, 24, 0.35);
+  color: #53fc18;
+}
+
+.platform-chip[data-platform="twitch"].active {
+  background: rgba(145, 70, 255, 0.12);
+  border-color: #9146ff;
+  box-shadow: 0 0 12px rgba(145, 70, 255, 0.35);
+  color: #a855f7;
+}
+
+.kick-badge-text {
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: #53fc18;
+  color: #000;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* BADGE FORM FIELDS */
+.badge-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.badge-field-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.badge-field-col label, .badge-control-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.badge-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.badge-input-at {
+  position: absolute;
+  left: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--cyan);
+  pointer-events: none;
+}
+
+.badge-input-wrapper input {
+  width: 100%;
+  padding: 9px 12px 9px 30px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-family: inherit;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.badge-input-wrapper input:focus, .badge-text-input:focus, .badge-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.badge-select {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.badge-text-input {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 0.85rem;
+}
