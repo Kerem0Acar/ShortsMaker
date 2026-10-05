@@ -444,7 +444,6 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
         
         # Run FFmpeg process with retry/fallback
         def execute_ffmpeg(encoder_args):
-            nonlocal process, stderr_lines
             cmd = [
                 "ffmpeg",
                 "-y",
@@ -505,16 +504,16 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
                         
             process.wait()
             err_thread.join(timeout=1.0)
-            return process.returncode
+            return process.returncode, "".join(stderr_lines)
 
         # First attempt (NVENC if requested, else CPU)
         initial_encoder = ["-c:v", "h264_nvenc", "-preset", "p5", "-b:v", "10M"] if req.use_gpu else ["-c:v", "libx264", "-preset", "fast", "-crf", "19"]
-        ret = execute_ffmpeg(initial_encoder)
+        ret, last_err = execute_ffmpeg(initial_encoder)
         
         # If NVENC failed (e.g. non-NVIDIA card, AMD, Intel, or older GPU), fallback automatically to CPU libx264
         if ret != 0 and req.use_gpu:
             print("⚠️ NVENC donanım kodlaması desteklenmiyor veya hata verdi. CPU (libx264) moduna geçiliyor...")
-            ret = execute_ffmpeg(["-c:v", "libx264", "-preset", "fast", "-crf", "19"])
+            ret, last_err = execute_ffmpeg(["-c:v", "libx264", "-preset", "fast", "-crf", "19"])
 
         if ret == 0 and os.path.exists(out_path):
             active_jobs[job_id]["status"] = "completed"
@@ -523,9 +522,8 @@ def run_export_ffmpeg(job_id: str, req: ExportRequest):
             active_jobs[job_id]["output_path"] = out_path
             active_jobs[job_id]["file_size"] = os.path.getsize(out_path)
         else:
-            err_msg = "".join(stderr_lines)
             active_jobs[job_id]["status"] = "error"
-            active_jobs[job_id]["error"] = f"FFmpeg Hatası (Çıkış Kodu {ret}): {err_msg}"
+            active_jobs[job_id]["error"] = f"FFmpeg Hatası (Çıkış Kodu {ret}): {last_err}"
             
     except FileNotFoundError:
         active_jobs[job_id]["status"] = "error"

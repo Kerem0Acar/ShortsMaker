@@ -40,7 +40,7 @@ if not exist ".venv\Scripts\activate.bat" (
         pause
         exit /b
     )
-    echo [PIP] Gerekli kutuphaneler yukleniyor (requirements.txt)...
+    echo [PIP] Gerekli kutuphaneler yukleniyor [requirements.txt]...
     call .venv\Scripts\activate.bat
     python -m pip install --upgrade pip
     pip install -r requirements.txt
