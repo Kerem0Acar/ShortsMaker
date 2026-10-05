@@ -1,0 +1,29 @@
+# Python Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Media & Temporary Data
+downloads/
+uploads/
+exports/
+test_stream.mp4
+*.mp4
+*.mkv
+*.mov
+*.webm
+*.avi
+
+# OS & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

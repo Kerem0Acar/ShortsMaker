@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShortsMaker Studio | YouTube, Yayın & Oyun Video Dönüştürücü</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b5cf6'><path d='M4 3a2 2 0 00-2 2v14a2 2 0 002 2h16a2 2 0 002-2V5a2 2 0 00-2-2H4zm8 14.5l-5-3.5 5-3.5v7zm4 0h-2V7h2v10.5z'/></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- TOP NAVIGATION -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-box">
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3"></rect>
+              <line x1="5" y1="10" x2="19" y2="10"></line>
+              <polygon points="10 14 10 18 14 16" fill="currentColor"></polygon>
+            </svg>
+          </div>
+          <div class="logo-text">
+            <h1>ShortsMaker <span>PRO</span></h1>
+            <p>Yayın & Oyun Videolarından Dikey Shorts/Reels/TikTok</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="hardware-badge" id="gpuBadge" title="NVIDIA RTX 3060 NVENC Donanım Hızlandırması Aktif">
+          <span class="pulse-dot"></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5zm4 4h-2v-2h2v2zm0-4h-2V7h2v5z"/>
+          </svg>
+          <span>RTX 3060 NVENC Hızlı Render</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btnOpenExportsModal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Çıktı Klasörü (<span id="exportCountBadge">0</span>)</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="main-content">
+      <!-- STEP 1: VIDEO SOURCE SELECTOR -->
+      <section class="card source-card" id="sourceSection">
+        <div class="card-header">
+          <div class="step-badge">1</div>
+          <div class="header-titles">
+            <h2>Video Kaynağını Belirleyin</h2>
+            <p>YouTube linki yapıştırın veya bilgisayarınızdan yayın/oyun videosu seçin</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="yt-tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <span>YouTube Videosu / Canlı Yayın</span>
+          </button>
+          <button class="tab-btn" data-tab="local-tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span>Bilgisayardan Dosya Yükle</span>
+          </button>
+          <button class="tab-btn" data-tab="path-tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            <span>Yerel Disk Yolu (Hızlı)</span>
+          </button>
+        </div>
+
+        <!-- TAB CONTENT: YOUTUBE -->
+        <div class="tab-content active" id="yt-tab">
+          <div class="input-row">
+            <div class="input-with-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=... veya https://youtu.be/..." />
+            </div>
+            <button class="btn btn-primary" id="btnFetchYt">
+              <span class="btn-text">Bilgileri Getir</span>
+              <div class="spinner" style="display:none;"></div>
+            </button>
+          </div>
+
+          <!-- YOUTUBE VIDEO CARD (AFTER FETCH) -->
+          <div class="yt-preview-card" id="ytPreviewCard" style="display: none;">
+            <img id="ytThumbnail" class="yt-thumb" src="" alt="Thumbnail">
+            <div class="yt-meta">
+              <h3 id="ytTitle">Video Başlığı</h3>
+              <div class="yt-badges">
+                <span class="badge" id="ytChannel">Kanal</span>
+                <span class="badge badge-accent" id="ytDuration">00:00</span>
+              </div>
+              <div class="yt-actions">
+                <button class="btn btn-accent btn-sm" id="btnDownloadYt">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Videoyu İndir ve Editöre Al</span>
+                </button>
+                <div class="download-progress-container" id="ytDownloadProg" style="display: none;">
+                  <div class="progress-info">
+                    <span id="ytDownloadStatus">İndiriliyor...</span>
+                    <span id="ytDownloadPercent">0%</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="ytDownloadFill" style="width: 0%"></div>
+                  </div>
+                  <span class="download-subtext" id="ytDownloadSubtext">Hız: -- | Kalan: --</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: LOCAL UPLOAD -->
+        <div class="tab-content" id="local-tab">
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="localFileInput" accept="video/mp4,video/mkv,video/webm,video/mov,video/avi" style="display:none;">
+            <div class="drop-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                <path d="M12 12v9"></path>
+                <path d="m16 16-4-4-4 4"></path>
+              </svg>
+            </div>
+            <h4>Video dosyanızı buraya sürükleyin veya göz atın</h4>
+            <p>Desteklenen: MP4, MKV, MOV, WEBM, TS (OBS Yayın Kayıtları Dahil)</p>
+            <button class="btn btn-outline" onclick="document.getElementById('localFileInput').click()">Dosya Seç</button>
+            <div class="upload-progress-box" id="uploadProgressBox" style="display: none;">
+              <span id="uploadStatusText">Yükleniyor...</span>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="uploadProgressFill" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: DIRECT LOCAL PATH (FASTEST FOR LARGE OBS VODS) -->
+        <div class="tab-content" id="path-tab">
+          <p class="tab-tip">💡 <strong>İpucu:</strong> Gigabaytlarca OBS veya Twitch kaydınızı kopyalamakla uğraşmayın! Dosya yolunu yapıştırın, anında yüklensin.</p>
+          <div class="input-row">
+            <div class="input-with-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <input type="text" id="directPathInput" placeholder="Örn: C:\Recordings\2026-10-04_stream.mp4" />
+            </div>
+            <button class="btn btn-primary" id="btnLoadDirectPath">
+              <span>Dosyayı Aç</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 2: STUDIO & EDITOR (HIDDEN UNTIL VIDEO LOADED) -->
+      <section class="studio-section" id="studioSection" style="display: none;">
+        <!-- CONTROLS & TIMELINE ROW -->
+        <div class="card timeline-card">
+          <div class="timeline-header">
+            <div class="step-badge">2</div>
+            <div class="timeline-meta">
+              <h2>Zaman Aralığı & Kırpma (Shorts Dakikalarını Belirleyin)</h2>
+              <span class="duration-badge" id="clipDurationBadge">Süre: 00 sn</span>
+            </div>
+            <div class="timeline-shortcuts">
+              <button class="btn btn-sm btn-ghost" id="btnSetStartCurrent" title="Videonun şu anki saniyesini başlangıç yap">
+                [ Başlangıç ( [ )
+              </button>
+              <button class="btn btn-sm btn-ghost" id="btnSetEndCurrent" title="Videonun şu anki saniyesini bitiş yap">
+                Bitiş ( ] ) ]
+              </button>
+              <button class="btn btn-sm btn-ghost" id="btnPlayPauseClip">
+                ▶ Oynat / Durdur (Boşluk)
+              </button>
+            </div>
+          </div>
+
+          <!-- TIME CONTROLLERS -->
+          <div class="time-inputs-container">
+            <div class="time-field">
+              <label>Başlangıç Zamanı</label>
+              <div class="time-input-group">
+                <input type="text" id="inputStartTime" value="00:00:00" placeholder="00:00:00">
+                <span class="unit-label" id="labelStartSec">0.0 sn</span>
+              </div>
+            </div>
+
+            <div class="range-slider-wrapper">
+              <div class="custom-slider-track" id="sliderTrack">
+                <div class="custom-slider-highlight" id="sliderHighlight"></div>
+                <div class="slider-handle" id="handleStart" data-type="start" tabindex="0">
+                  <div class="handle-tag" id="tagStart">00:00</div>
+                </div>
+                <div class="slider-playhead" id="playhead" style="left: 0%;"></div>
+                <div class="slider-handle" id="handleEnd" data-type="end" tabindex="0">
+                  <div class="handle-tag" id="tagEnd">00:60</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="time-field">
+              <label>Bitiş Zamanı</label>
+              <div class="time-input-group">
+                <input type="text" id="inputEndTime" value="00:01:00" placeholder="00:01:00">
+                <span class="unit-label" id="labelEndSec">60.0 sn</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CROP & PREVIEW TWO-COLUMN WORKSPACE -->
+        <div class="editor-grid">
+          <!-- LEFT COLUMN: SOURCE VIDEO & INTERACTIVE CROP BOXES -->
+          <div class="card crop-card">
+            <div class="card-header-between">
+              <div>
+                <h3>1. Kaynak Video & Kırpma Alanları</h3>
+                <p>Webcam ve Oyun kutularını video üzerinde sürükleyip boyutlandırın</p>
+              </div>
+
+              <!-- PRESETS & AI TOOLS -->
+              <div class="crop-presets">
+                <button class="btn btn-ai btn-sm" id="btnAiFaceDetect" title="OpenCV ile streamer yüzünü otomatik bulur">
+                  <span class="ai-sparkle">✨</span>
+                  <span>Yüzü / Kamerayı Otomatik Bul</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- PRESET QUICK BUTTONS -->
+            <div class="preset-pills">
+              <span class="pill-title">Kamera Önayarı:</span>
+              <button class="pill-btn" data-cam="top-right">Sağ Üst</button>
+              <button class="pill-btn" data-cam="top-left">Sol Üst</button>
+              <button class="pill-btn" data-cam="bottom-right">Sağ Alt</button>
+              <button class="pill-btn" data-cam="bottom-left">Sol Alt</button>
+              <button class="pill-btn" data-cam="center">Merkez</button>
+              <span class="pill-divider">|</span>
+              <span class="pill-title">Oyun:</span>
+              <button class="pill-btn" data-game="center-focus">Merkez Odak</button>
+              <button class="pill-btn" data-game="full-width">Geniş Açı</button>
+            </div>
+
+            <!-- INTERACTIVE CANVAS STAGE -->
+            <div class="video-stage-container" id="stageContainer">
+              <video id="sourceVideo" preload="metadata" playsinline crossorigin="anonymous"></video>
+              <canvas id="cropCanvas"></canvas>
+            </div>
+
+            <!-- CROP BOX LEGEND / ACTIVE INFO -->
+            <div class="box-legends">
+              <div class="legend-item legend-face">
+                <span class="legend-color-dot" style="background: #a855f7;"></span>
+                <span class="legend-name">🟣 Üst Kısım: Webcam / Yüz</span>
+                <span class="legend-coords" id="coordsFace">X: 0 Y: 0 W: 400 H: 300</span>
+              </div>
+              <div class="legend-item legend-game">
+                <span class="legend-color-dot" style="background: #06b6d4;"></span>
+                <span class="legend-name">🔵 Alt Kısım: Oyun / Ekran</span>
+                <span class="legend-coords" id="coordsGame">X: 0 Y: 0 W: 1280 H: 720</span>
+              </div>
+            </div>
+
+            <!-- STYLING CONTROLS (SPLIT RATIO & DIVIDER) -->
+            <div class="style-controls-panel">
+              <div class="control-group">
+                <label for="splitRatioRange">
+                  Dikey Bölünme Oranı: <span id="splitRatioValue">45% Kamera / 55% Oyun</span>
+                </label>
+                <input type="range" id="splitRatioRange" min="25" max="65" value="45" step="1">
+              </div>
+
+              <div class="control-group">
+                <label>Ayırıcı Çizgi Rengi:</label>
+                <div class="color-picker-row">
+                  <button class="color-btn active" data-color="#06b6d4" style="background: #06b6d4;" title="Neon Camgöbeği"></button>
+                  <button class="color-btn" data-color="#a855f7" style="background: #a855f7;" title="Neon Mor"></button>
+                  <button class="color-btn" data-color="#eab308" style="background: #eab308;" title="Altın"></button>
+                  <button class="color-btn" data-color="#ffffff" style="background: #ffffff;" title="Beyaz"></button>
+                  <button class="color-btn" data-color="none" title="Çizgisiz">✕</button>
+                  <input type="color" id="customColorPicker" value="#06b6d4" title="Özel Renk">
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label for="dividerThickness">Çizgi Kalınlığı: <span id="thicknessValue">4px</span></label>
+                <input type="range" id="dividerThickness" min="0" max="12" value="4" step="1">
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: LIVE 9:16 VERTICAL SHORTS PREVIEW -->
+          <div class="card preview-card">
+            <div class="card-header-between">
+              <div>
+                <h3>2. Canlı 9:16 Shorts Önizlemesi</h3>
+                <p>Instagram Reels, TikTok & YouTube Shorts görünümü</p>
+              </div>
+              <div class="social-overlay-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="chkSocialOverlay" checked>
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-text">TikTok/Reels Butonları</span>
+              </div>
+            </div>
+
+            <!-- PHONE FRAME MOCKUP -->
+            <div class="phone-mockup-wrapper">
+              <div class="phone-frame">
+                <!-- DYNAMIC ISLAND / SPEAKER -->
+                <div class="phone-speaker"></div>
+
+                <!-- 9:16 CANVAS PREVIEW -->
+                <canvas id="previewCanvas" width="1080" height="1920"></canvas>
+
+                <!-- SOCIAL OVERLAY (LIKE/SHARE ICONS ON RIGHT) -->
+                <div class="social-overlay-ui" id="socialOverlayUi">
+                  <div class="social-right-rail">
+                    <div class="social-avatar">
+                      <div class="avatar-circle"></div>
+                      <span class="avatar-plus">+</span>
+                    </div>
+                    <div class="social-action">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                      <span>142K</span>
+                    </div>
+                    <div class="social-action">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      </svg>
+                      <span>1,248</span>
+                    </div>
+                    <div class="social-action">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <polyline points="16 6 12 2 8 6"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="15"></line>
+                      </svg>
+                      <span>Paylaş</span>
+                    </div>
+                  </div>
+                  <div class="social-bottom-meta">
+                    <span class="social-username">@yayıncı_kanalı</span>
+                    <p class="social-desc">Canlı yayından efsane anlar! 🔥 #shorts #reels #gaming</p>
+                    <div class="social-sound">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                      <span>Orijinal Ses - Yayın Kaydı</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- EXPORT ACTION BOX -->
+            <div class="export-box">
+              <div class="export-options">
+                <input type="text" id="exportTitleInput" placeholder="Shorts Başlığı (Örn: Valorant_Clutch_1)" />
+                <div class="render-speed-badge">⚡ RTX 3060 Donanım Kodlaması (NVENC)</div>
+              </div>
+              <button class="btn btn-render" id="btnStartExport">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>Shorts Videosunu Render Et (1080x1920)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- EXPORT PROGRESS MODAL -->
+    <div class="modal-backdrop" id="exportModal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-with-icon">
+            <div class="spinner-small" id="renderSpinner"></div>
+            <h3 id="modalTitle">Shorts Render Ediliyor...</h3>
+          </div>
+          <button class="btn-close" id="btnCloseModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="render-stats">
+            <div class="stat-box">
+              <span class="stat-label">Hız</span>
+              <span class="stat-value" id="statSpeed">--</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">FPS</span>
+              <span class="stat-value" id="statFps">--</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">İlerleme</span>
+              <span class="stat-value highlight" id="statPercent">0%</span>
+            </div>
+          </div>
+
+          <div class="progress-bar-bg modal-progress">
+            <div class="progress-bar-fill animated-glow" id="renderProgressFill" style="width: 0%;"></div>
+          </div>
+
+          <!-- SUCCESS STATE -->
+          <div class="render-success-box" id="renderSuccessBox" style="display: none;">
+            <div class="success-icon">🎉</div>
+            <h4>Videonuz Hazır!</h4>
+            <p>1080x1920 dikey formatında başarıyla kaydedildi.</p>
+            
+            <div class="success-actions">
+              <button class="btn btn-primary" id="btnOpenExportFolder">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Klasörde Göster</span>
+              </button>
+              <a class="btn btn-secondary" id="btnDownloadRendered" download>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Dosyayı İndir</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIOUS EXPORTS MODAL -->
+    <div class="modal-backdrop" id="exportsListModal" style="display: none;">
+      <div class="modal-card wide-modal">
+        <div class="modal-header">
+          <h3>Oluşturulan Shorts Videoları</h3>
+          <button class="btn-close" id="btnCloseExportsModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="exports-grid" id="exportsGrid">
+            <p class="empty-state">Henüz oluşturulmuş bir Shorts bulunmuyor.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
