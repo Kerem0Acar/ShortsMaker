@@ -319,6 +319,7 @@ async def detect_face(req: FaceDetectRequest):
     to detect face position (ideal for webcam detection).
     """
     try:
+        # pyrefly: ignore [missing-import]
         import cv2
         cap = cv2.VideoCapture(req.video_path)
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
