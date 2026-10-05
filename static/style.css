@@ -1327,6 +1327,13 @@ input:checked + .slider:before {
   transition: opacity 0.2s ease;
 }
 
+.badge-label-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .badge-sublabel {
   display: block;
   font-size: 0.75rem;
@@ -1334,7 +1341,12 @@ input:checked + .slider:before {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 8px;
+}
+
+.badge-multi-hint {
+  font-size: 0.72rem;
+  color: var(--cyan);
+  font-weight: 500;
 }
 
 /* PLATFORM CHIPS */

@@ -7,7 +7,7 @@ import shutil
 import asyncio
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
@@ -66,6 +66,7 @@ class ExportRequest(BaseModel):
     output_title: Optional[str] = "short"
     badge_enabled: bool = False
     badge_platform: Optional[str] = "tiktok"
+    badge_platforms: Optional[List[str]] = ["tiktok"]
     badge_username: Optional[str] = "jahrein"
     badge_format: Optional[str] = "url"
     badge_position: Optional[str] = "divider"

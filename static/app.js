@@ -35,6 +35,7 @@ const state = {
   badge: {
     enabled: true,
     platform: 'tiktok',
+    platforms: ['tiktok'],
     username: 'jahrein',
     format: 'url',
     size: 'medium',
@@ -931,9 +932,25 @@ function setupBadgeControls() {
 
   dom.platformChips.forEach(chip => {
     chip.addEventListener('click', () => {
-      dom.platformChips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      state.badge.platform = chip.getAttribute('data-platform');
+      const plat = chip.getAttribute('data-platform');
+      if (!Array.isArray(state.badge.platforms)) {
+        state.badge.platforms = [state.badge.platform || 'tiktok'];
+      }
+
+      const idx = state.badge.platforms.indexOf(plat);
+      if (idx > -1) {
+        // Already active -> deselect only if more than 1 selected
+        if (state.badge.platforms.length > 1) {
+          state.badge.platforms.splice(idx, 1);
+          chip.classList.remove('active');
+        }
+      } else {
+        // Not active -> add to selected
+        state.badge.platforms.push(plat);
+        chip.classList.add('active');
+      }
+
+      state.badge.platform = state.badge.platforms[0] || 'tiktok';
     });
   });
 
@@ -991,13 +1008,23 @@ function getBadgeDisplayText(badge) {
   if (badge.format === 'handle') {
     return `@${cleanUser}`;
   }
-  switch (badge.platform) {
-    case 'tiktok': return `tiktok.com/@${cleanUser}`;
-    case 'instagram': return `instagram.com/${cleanUser}`;
-    case 'youtube': return `youtube.com/@${cleanUser}`;
-    case 'kick': return `kick.com/${cleanUser}`;
-    case 'twitch': return `twitch.tv/${cleanUser}`;
-    default: return `@${cleanUser}`;
+  
+  const plats = (badge.platforms && badge.platforms.length > 0)
+    ? badge.platforms
+    : [badge.platform || 'tiktok'];
+    
+  if (plats.length === 1) {
+    switch (plats[0]) {
+      case 'tiktok': return `tiktok.com/@${cleanUser}`;
+      case 'instagram': return `instagram.com/${cleanUser}`;
+      case 'youtube': return `youtube.com/@${cleanUser}`;
+      case 'kick': return `kick.com/${cleanUser}`;
+      case 'twitch': return `twitch.tv/${cleanUser}`;
+      default: return `@${cleanUser}`;
+    }
+  } else {
+    // When multiple platforms are selected, the cleanest creator watermark is @username
+    return `@${cleanUser}`;
   }
 }
 
@@ -1154,39 +1181,50 @@ function drawBadgeOnCanvas(ctx, outW, outH, topH) {
   const badge = state.badge;
   if (!badge || !badge.enabled) return;
 
+  const platforms = (badge.platforms && badge.platforms.length > 0)
+    ? badge.platforms
+    : [badge.platform || 'tiktok'];
+
   const text = getBadgeDisplayText(badge);
-  const theme = platformBadgeThemes[badge.platform] || platformBadgeThemes.tiktok;
+  const primaryPlatform = platforms[0] || 'tiktok';
+  const primaryTheme = platformBadgeThemes[primaryPlatform] || platformBadgeThemes.tiktok;
 
   // Sizing configurations ("Görseldeki kadar büyük olmasın. Okunabilir olsun")
   let badgeH = 68;
   let fontSize = 29;
-  let iconW = 54;
-  let iconH = 40;
   let radius = 18;
   let padX = 18;
+  let iconW = 50;
+  let iconH = 38;
+  let iconGap = 8;
 
   if (badge.size === 'compact') {
     badgeH = 54;
     fontSize = 24;
-    iconW = 44;
-    iconH = 34;
     radius = 15;
-    padX = 15;
+    padX = 14;
+    iconW = 40;
+    iconH = 32;
+    iconGap = 6;
   } else if (badge.size === 'large') {
     badgeH = 82;
     fontSize = 35;
-    iconW = 66;
-    iconH = 48;
     radius = 22;
     padX = 22;
+    iconW = 60;
+    iconH = 46;
+    iconGap = 10;
   }
+
+  // Calculate total icons width
+  const totalIconsW = (platforms.length * iconW) + ((platforms.length - 1) * iconGap);
 
   // Measure text width
   ctx.save();
   ctx.font = `800 ${fontSize}px "Plus Jakarta Sans", -apple-system, sans-serif`;
   const textWidth = ctx.measureText(text).width;
-  const gap = 12;
-  const totalW = padX + iconW + gap + textWidth + padX;
+  const gapToText = 14;
+  const totalW = padX + totalIconsW + gapToText + textWidth + padX;
 
   // Position
   let y;
@@ -1211,12 +1249,31 @@ function drawBadgeOnCanvas(ctx, outW, outH, topH) {
   drawRoundRect(ctx, x, y, totalW, badgeH, radius);
   ctx.fill();
 
-  // 2. Glow Border matching platform
-  ctx.shadowColor = theme.glow;
-  ctx.shadowBlur = 14;
-  ctx.shadowOffsetY = 0;
-  ctx.lineWidth = 2.4;
-  ctx.strokeStyle = theme.border;
+  // 2. Glow Border: If single platform, use that theme; if multiple, draw a sleek gradient border!
+  if (platforms.length === 1) {
+    ctx.shadowColor = primaryTheme.glow;
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 0;
+    ctx.lineWidth = 2.4;
+    ctx.strokeStyle = primaryTheme.border;
+  } else {
+    // Multi-platform subtle gradient border!
+    const borderGrad = ctx.createLinearGradient(x, y, x + totalW, y);
+    const colorStops = platforms.map(p => (platformBadgeThemes[p] ? platformBadgeThemes[p].border : '#00f2fe'));
+    if (colorStops.length === 2) {
+      borderGrad.addColorStop(0, colorStops[0]);
+      borderGrad.addColorStop(1, colorStops[1]);
+    } else {
+      colorStops.forEach((c, idx) => {
+        borderGrad.addColorStop(idx / (colorStops.length - 1), c);
+      });
+    }
+    ctx.shadowColor = 'rgba(139, 92, 246, 0.4)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 0;
+    ctx.lineWidth = 2.4;
+    ctx.strokeStyle = borderGrad;
+  }
   drawRoundRect(ctx, x, y, totalW, badgeH, radius);
   ctx.stroke();
 
@@ -1225,13 +1282,18 @@ function drawBadgeOnCanvas(ctx, outW, outH, topH) {
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  // 3. Platform Icon
-  const iconX = x + padX;
+  // 3. Draw each selected platform icon in order!
+  let currentIconX = x + padX;
   const iconY = y + Math.round((badgeH - iconH) / 2);
-  drawPlatformIcon(ctx, badge.platform, iconX, iconY, iconW, iconH, theme);
+
+  platforms.forEach(plat => {
+    const pTheme = platformBadgeThemes[plat] || platformBadgeThemes.tiktok;
+    drawPlatformIcon(ctx, plat, currentIconX, iconY, iconW, iconH, pTheme);
+    currentIconX += iconW + iconGap;
+  });
 
   // 4. Clean bold white text
-  const textX = iconX + iconW + gap;
+  const textX = x + padX + totalIconsW + gapToText;
   const textY = y + Math.round(badgeH / 2) + Math.round(fontSize * 0.35);
 
   ctx.textAlign = 'left';
@@ -1326,6 +1388,7 @@ function setupExport() {
     if (state.badge && state.badge.enabled) {
       payload.badge_enabled = true;
       payload.badge_platform = state.badge.platform;
+      payload.badge_platforms = state.badge.platforms || [state.badge.platform];
       payload.badge_username = state.badge.username;
       payload.badge_format = state.badge.format;
       payload.badge_position = state.badge.position;
